@@ -1,3 +1,4 @@
+/*
 package com.studentservice.feignclients;
 
 
@@ -16,3 +17,4 @@ public class AddressServerLoadBalancerConfig {
     }
 
 }
+*/
