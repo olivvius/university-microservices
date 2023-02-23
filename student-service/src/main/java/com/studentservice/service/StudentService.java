@@ -6,6 +6,8 @@ import com.studentservice.request.CreateStudentRequest;
 import com.studentservice.response.AddressResponse;
 import com.studentservice.response.StudentResponse;
 import com.studentservice.feignclients.AddressFeignClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,16 +16,18 @@ import reactor.core.publisher.Mono;
 @Service
 public class StudentService {
 
+
 	@Autowired
 	StudentRepository studentRepository;
 
 	@Autowired
 	WebClient webClient;
 
-
 	@Autowired
 	AddressFeignClient addressFeignClient;
 
+	@Autowired
+	CommonService commonService;
 
 	public StudentResponse createStudent(CreateStudentRequest createStudentRequest) {
 
@@ -39,7 +43,7 @@ public class StudentService {
 		StudentResponse studentResponse = new StudentResponse(student);
 		//studentResponse.setAddressResponse(getAddressById(student.getAddressId()));
 
-		studentResponse.setAddressResponse(addressFeignClient.getById(student.getAddressId()));
+		studentResponse.setAddressResponse(commonService.getAddressById(student.getAddressId()));
 
 		return studentResponse;
 	}
@@ -48,16 +52,23 @@ public class StudentService {
 		Student student = studentRepository.findById(id).get();
 		StudentResponse studentResponse = new StudentResponse(student);
 		//studentResponse.setAddressResponse(getAddressById(student.getAddressId()));
-		studentResponse.setAddressResponse(addressFeignClient.getById(student.getAddressId()));
+		studentResponse.setAddressResponse(commonService.getAddressById(student.getAddressId()));
 
 		return studentResponse;
 	}
 
+/*	@CircuitBreaker(name = "adressService", fallbackMethod = "fallbackGetAddressById")
 	public AddressResponse getAddressById(long addressId){
 
-		Mono<AddressResponse> addressResponse = webClient.get().uri("/getById/" + addressId)
-				.retrieve().bodyToMono(AddressResponse.class);
-		return addressResponse.block();
+		AddressResponse addressResponse = addressFeignClient.getById(addressId);
+
+		return addressResponse;
+
 	}
+
+	public AddressResponse fallbackGetAddressById(long addressId, Throwable th){
+		return new AddressResponse();
+	}*/
+
 
 }
